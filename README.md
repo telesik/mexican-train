@@ -12,6 +12,9 @@ variants of the game will live in this same repository as modes of one app.
 - Rules — coming soon (`docs/RULES.<lang>.md`), 12 languages as in
   [Dofodo](https://github.com/telesik/dofodo).
 - Mobile app (iOS / Android) — separate private repository.
+- Shared code of telesik domino games — git submodule `commons/`
+  ([telesik-web-commons](https://github.com/telesik/telesik-web-commons));
+  clone with `git clone --recurse-submodules` or run `git submodule update --init`.
 
 Mexican Train is a traditional game (first published in 1994; many editions
 since). This project is an independent interpretation; it is not affiliated
