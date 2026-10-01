@@ -87,8 +87,19 @@ export type LogEntry =
       /** Кость закрыла открытый дубль. */
       readonly covers: boolean;
     }
-  | { readonly kind: 'draw'; readonly player: Player; readonly tile: TileId; readonly playable: boolean }
-  | { readonly kind: 'pass'; readonly player: Player }
+  | {
+      readonly kind: 'draw';
+      readonly player: Player;
+      /** Вытянутая кость. Сопернику её не показывают. */
+      readonly tile: TileId;
+      readonly playable: boolean;
+      /**
+       * Концы, к которым игроку нечего было приставить перед добором — это
+       * видно обоим. В поиске локомотива пусто.
+       */
+      readonly lacks: readonly number[];
+    }
+  | { readonly kind: 'pass'; readonly player: Player; readonly lacks: readonly number[] }
   /** Выложен «мёртвый» дубль: продолжить его нечем, поезд на нём закончен. */
   | { readonly kind: 'dead'; readonly train: TrainId }
   | { readonly kind: 'open'; readonly train: TrainId }
