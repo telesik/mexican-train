@@ -3,6 +3,7 @@ export * from './rng';
 export * from './state';
 export * from './rules';
 export * from './score';
+export * from './engine';
 export * from './match';
 export * from './replay';
 export * from './bot';

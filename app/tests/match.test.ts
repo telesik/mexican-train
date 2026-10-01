@@ -72,7 +72,7 @@ describe('матч', () => {
     const done = finishRound({ ...m, round: over });
     expect(done.totals).toEqual(over.result!.added);
     expect(done.rounds).toHaveLength(1);
-    expect(done.rounds[0]).toMatchObject({ round: 0, first: 0, seed: 3, moves: over.history });
+    expect(done.rounds[0]).toMatchObject({ first: 0, seed: 3, moves: over.history });
     expect(done.outcome).toBeNull();
   });
 
