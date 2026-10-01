@@ -1,0 +1,201 @@
+// Русский — первичный словарь: он задаёт тип Dict, остальные обязаны совпадать по ключам.
+
+/** Русское склонение: 1 кость, 2 кости, 5 костей. */
+function ruTiles(n: number): string {
+  const m10 = n % 10;
+  const m100 = n % 100;
+  if (m10 === 1 && m100 !== 11) return `${n} кость`;
+  if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return `${n} кости`;
+  return `${n} костей`;
+}
+
+export const ru = {
+  // Тексты каркаса приложения (контракт ShellTexts общего пакета)
+  tagline: 'Мексиканский поезд на обычном домино: локомотив, три поезда и семь раундов на двоих.',
+  howtoLink: 'Как играть',
+  linkSupport: 'Поддержать авторов',
+  linkAppStore: 'Mexican Train в App Store',
+  linkGooglePlay: 'Mexican Train в Google Play',
+  linkPrivacy: 'Политика конфиденциальности',
+  fieldName: 'Имя игрока',
+  fieldYourName: 'Ваше имя',
+  fieldOpponentName: 'Имя соперника',
+  fieldOpponent: 'Соперник',
+  fieldLang: 'Язык',
+  oppHuman: 'человек — за одним экраном',
+  oppBotEasy: 'бот — лёгкий',
+  oppBotNormal: 'бот — обычный',
+  oppBotStrong: 'бот — сильный',
+  botNameEasy: 'Лёгкий бот',
+  botNameNormal: 'Обычный бот',
+  botNameStrong: 'Сильный бот',
+  defaultP1: 'Игрок 1',
+  defaultP2: 'Игрок 2',
+  lotDecides: 'Жребий решает, кто начинает первый раунд',
+  lotWinner: (name: string) => `Меньшая сумма — первый раунд начинает ${name}`,
+  btnLot: 'Бросить жребий',
+  btnStart: 'Начать матч',
+  btnContinue: (label: string) => `Продолжить матч ${label}`,
+  tutorStart: 'Бросьте жребий — первый раунд начинает тот, у кого меньше сумма на вытянутой кости. Потом «Начать матч»: по 7 костей в руки, 14 — в базар. Дальше подсказки проведут по раунду.',
+  versionWord: 'версия',
+  rulesWord: (v: string) => `правила игры ${v}`,
+  roundChip: (n: number) => `раунд ${n}/7`,
+  viewChip: (i: number, n: number) => `просмотр · раунд ${i} из ${n}`,
+  statusNewRound: 'Новый раунд',
+  statusRoundOver: 'Раунд окончен',
+  statusBotThinking: (name: string) => `${name}: думает…`,
+  tipHistory: 'История ходов: перемотка сыгранных раундов',
+  tipFit: 'Автомасштаб: держать всю фигуру в кадре (двойной клик по столу — включить)',
+  tipNew: 'Бросить текущий матч',
+  confirmNewMatch: 'Бросить текущий матч и начать новый?',
+  firstChip: 'первый',
+  turnMarkTitle: 'Ходит',
+  pileCount: (n: number) => `базар: ${n}`,
+  toastNoDrawHaveMove: 'Есть ход — брать из базара нельзя',
+  toastNoDrawNow: 'Сейчас тянуть нельзя',
+  toastPassAuto: (name: string) => `У ${name} нет хода — пас`,
+  toastFirstOpen: (name: string) => `Раунд начинает ${name}`,
+  toastRoundStart: (n: number, name: string) => `Раунд ${n}: начинает ${name}`,
+  toastProtoBroken: (err: string) => `Протокол не воспроизводится: ${err}`,
+  tutorBotTurn: 'Сейчас ходит бот — он думает сам, подождите немного.',
+  tutorRemoteTurn: 'Сейчас ходит соперник — подождите немного.',
+  tutorPending: 'Проверьте выбранный ход: поставить — кнопкой или повторным кликом по тени; передумали — отмена или другая тень.',
+  tutorShowRules: 'показывать правила игры (вернуть можно в настройках)',
+  tutorEnough: 'Вы сыграли несколько раундов — возможно, подсказки больше не нужны.',
+  btnTutorOff: 'Выключить подсказки',
+  btnTutorKeep: 'Оставить',
+  confirmYes: 'Поставить',
+  confirmNo: 'Отмена',
+  resultTime: (round: string, total: string) => `Время раунда ${round} · матча ${total}`,
+  btnNextRound: 'Следующий раунд',
+  btnWaiting: 'Ждём подтверждения от соперника',
+  btnPeerReady: 'Соперник готов и ждёт вас',
+  btnAbortMatch: 'Бросить матч',
+  btnNewMatch: 'Новый матч',
+  btnHistory: 'История ходов',
+  historyLive: 'История ходов матча',
+  historyDeal: (name: string) => `Раздача — раунд начинает ${name}`,
+  historyPos: (k: number, m: number) => `ход ${k}/${m}`,
+  roundOptLive: (n: number) => `Раунд ${n} — идёт`,
+  tipExitReplay: 'Вернуться к игре',
+  tipRoundSelect: 'Выбор раунда матча',
+  tipToDeal: 'К раздаче',
+  tipStepBack: 'Ход назад',
+  tipStepFwd: 'Ход вперёд',
+  tipToEnd: 'К концу раунда',
+  settingsTitle: 'Настройки',
+  btnDone: 'Готово',
+  tipSound: 'Звук выставления костей',
+  tipTutor: 'Режим обучения: подсказки, какие ходы возможны и как их сделать',
+  tipConfirm: 'Подтверждение хода: клик по тени только выбирает ход, кость ставится после подтверждения',
+
+  // «Как играть»: рамка слайдов и вопрос при первом запуске
+  howtoKicker: (n: number, total: number) => `Как играть · ${n} из ${total}`,
+  howtoNext: 'Далее',
+  howtoSkip: 'Пропустить',
+  howtoBack: 'Назад',
+  howtoDone: 'Понятно',
+  howtoClose: 'Закрыть',
+  howtoAsk: 'Показать, как играть?',
+  howtoAskYes: 'Показать',
+  howtoAskLater: 'Позже',
+  howtoFullRules: 'Полные правила',
+
+  // «Как играть»: слайды
+  howtoS1Title: 'Локомотив и три поезда',
+  howtoS1Text: 'Раунд открывает локомотив — дубль раунда. От него идут три поезда: ваш, соперника и общий мексиканский.',
+  howtoS1Sub: 'В первом раунде локомотив 6:6, дальше 5:5 и так до 0:0 — всего семь раундов.',
+  howtoS2Title: 'Ход — одна кость',
+  howtoS2Text: 'Кость приставляется к концу поезда тем же числом: на свой поезд, на мексиканский или на открытый поезд соперника.',
+  howtoS2Sub: 'Можете поставить кость — обязаны поставить.',
+  howtoS3Title: 'Ходить нечем',
+  howtoS3Text: 'Возьмите одну кость из базара. Подошла — ставьте её. Нет — ваш поезд открывается, и соперник может на него играть.',
+  howtoS3Sub: 'Поезд закроется, как только вы сами сыграете на него.',
+  howtoS4Title: 'Дубль',
+  howtoS4Text: 'Дубль ставится поперёк и тем же ходом требует продолжения — кости с тем же числом.',
+  howtoS4Sub: 'Не закрыли дубль — закрыть его обязан соперник. Пока дубль открыт, других ходов нет.',
+  howtoS5Title: 'Конец раунда и счёт',
+  howtoS5Text: 'Раунд кончается, когда кто-то выложил все кости или ходов нет ни у кого. Очки — сумма на оставшихся костях.',
+  howtoS5Sub: 'После семи раундов побеждает меньшая сумма. Одинокая 0:0 на руке — 25 очков.',
+  howtoBoneyard: 'базар',
+
+  // Приглашение к ходу
+  promptLoco: (name: string, tile: string) => `${name}: выставьте локомотив ${tile}`,
+  promptLocoDraw: (name: string, tile: string) =>
+    `${name}: локомотива ${tile} на руке нет — возьмите кость из базара`,
+  promptCover: (name: string, v: number) => `${name}: закройте дубль — нужна кость с числом ${v}`,
+  promptCoverDraw: (name: string) => `${name}: закрыть дубль нечем — возьмите кость из базара`,
+  promptMustPlay: (name: string, tile: string) =>
+    `${name}: кость ${tile} подходит — обязаны сходить ею`,
+  promptYourMove: (name: string) => `${name}: ваш ход — выберите кость и место`,
+  promptDraw: (name: string) => `${name}: сходить нечем — возьмите кость из базара`,
+  promptPass: (name: string) => `${name}: сходить нечем, базар пуст — пас`,
+
+  // Журнал ходов (без глаголов прошедшего времени — имена любого рода)
+  trainOf: (name: string) => `поезд игрока ${name}`,
+  trainMexican: 'мексиканский поезд',
+  logLoco: (name: string, tile: string) => `${name}: локомотив ${tile}`,
+  logPlace: (name: string, tile: string, train: string) => `${name}: ${tile} — ${train}`,
+  logCover: (name: string, tile: string) => `${name}: ${tile} — дубль закрыт`,
+  logDraw: (name: string) => `${name}: кость из базара — в руку, ход дальше`,
+  logDrawFits: (name: string) => `${name}: кость из базара — подходит!`,
+  logPass: (name: string) => `${name}: пас`,
+  logDead: (train: string) => `Мёртвый дубль — ${train} закончен`,
+  logOpen: (train: string) => `Открыт ${train}`,
+  logClose: (train: string) => `Закрыт ${train}`,
+  logOut: 'Выход!',
+  logBlocked: 'Рыба!',
+
+  // Тост обязательной кости
+  toastMustPlay: (tile: string) => `Обязаны сходить вытянутой костью ${tile}`,
+
+  // Руки
+  handMeta: (n: number, pts: number) => `${ruTiles(n)} · ${pts} очк.`,
+  handMetaHidden: (n: number) => `${ruTiles(n)}`,
+  tipTotal: 'Счёт матча — после семи раундов побеждает меньшая сумма',
+
+  // Стол
+  tableYours: 'ваш поезд',
+  tableOpponent: 'поезд соперника',
+  tableMexican: 'мексиканский поезд',
+  tableOpen: 'открыт',
+  tableLoco: (tile: string) => `локомотив ${tile}`,
+  tableDead: 'мёртвый дубль — поезд закончен',
+
+  // Итоги раунда и матча
+  resultOut: (name: string) => `Выход: ${name}!`,
+  resultBlocked: 'Рыба!',
+  resultOutSub: 'Последняя кость выставлена — рука пуста.',
+  resultBlockedSub: 'Кость не может поставить никто. Считаем очки.',
+  resultTieNote: ' Суммы равны — победителя раунда нет.',
+  resultEmptyHand: 'рука пуста',
+  resultZeroZero: '0:0 последней костью на руке — 25 очков.',
+  ptsShort: 'очк.',
+  matchWin: (name: string) => `Победа в матче: ${name}!`,
+  matchDraw: 'Ничья в матче — счёты равны',
+  matchRoundLabel: (n: number) => `Раунд ${n} из 7`,
+  nextFirstNote: (name: string, why: string) => `Следующий раунд начинает ${name} — ${why}.`,
+  whyWinner: 'победитель раунда',
+  whySwap: 'после раунда без победителя очередь переходит',
+  roundOptDone: (n: number, cause: string, s0: number, s1: number) =>
+    `Раунд ${n} — ${cause}, ${s0}:${s1}`,
+  causeOutShort: 'выход',
+  causeBlockedShort: 'рыба',
+
+  // Режим обучения
+  tutorLoco: 'Раунд открывает локомотив — дубль раунда. Кликните его в руке, затем место в центре стола.',
+  tutorLocoDraw: 'Локомотива на руке нет — кликните кучу базара. Вытянете нужный дубль — выставите его; нет — ход перейдёт сопернику.',
+  tutorPick: 'Кликните светлую кость в руке — на столе появятся тени её ходов.',
+  tutorPlace: 'Кликните тень — кость встанет туда. Играть можно на свой поезд, на мексиканский и на открытый поезд соперника.',
+  tutorCover: 'Дубль стоит поперёк и требует продолжения: закройте его костью с тем же числом. Пока дубль открыт, других ходов нет.',
+  tutorMustPlay: 'Кость из базара подошла — обязаны сходить именно ею: кликните одну из теней.',
+  tutorDraw: 'Ходить нечем — кликните кучу базара. Кость подойдёт — обязаны сходить ею; нет — останется в руке, а ваш поезд откроется для соперника.',
+  tutorPass: 'Ходить нечем, базар пуст — ход пропускается сам, ваш поезд открыт.',
+  tutorOver: 'Раунд окончен: очки — сумма на костях, оставшихся на руке. После семи раундов побеждает меньшая сумма.',
+
+  // Подтверждение хода
+  confirmAsk: (tile: string, train: string) => `Поставить ${tile} — ${train}?`,
+  confirmLocoAsk: (tile: string) => `Выставить локомотив ${tile}?`,
+};
+
+export type Dict = typeof ru;
