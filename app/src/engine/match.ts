@@ -51,7 +51,7 @@ export interface MatchState {
 
 export interface StartMatchOptions {
   readonly names: readonly [string, string];
-  /** Кому выпал жребий первого хода в первом раунде. */
+  /** Кому выпал жребий: он первым выставляет локомотив (или тянет) в первом раунде. */
   readonly first: Player;
   readonly variant: Variant;
   readonly seed?: RngState;
@@ -99,7 +99,10 @@ export function finishRound(match: MatchState): MatchState {
   return { ...match, totals, rounds, outcome };
 }
 
-/** Начать следующий раунд: первый ход переходит к другому игроку. */
+/**
+ * Начать следующий раунд: очередь выставлять локомотив переходит к другому
+ * игроку (в первом раунде её определяет жребий).
+ */
 export function nextRound(match: MatchState, seed?: RngState): MatchState {
   if (match.outcome) throw new Error('Матч окончен');
   if (match.rounds.length !== match.round.round + 1) throw new Error('Текущий раунд не учтён');

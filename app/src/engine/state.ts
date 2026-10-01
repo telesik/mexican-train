@@ -53,7 +53,11 @@ export interface Train {
   readonly open: boolean;
 }
 
-export type Phase = 'main' | 'over';
+/**
+ * loco — локомотив раунда ещё не выставлен: игроки по очереди выставляют
+ * нужный дубль или тянут по одной кости; main — обычная игра; over — конец.
+ */
+export type Phase = 'loco' | 'main' | 'over';
 
 /** out — игрок выложил последнюю кость; blocked — базар пуст, ходов нет ни у кого. */
 export type RoundEndCause = 'out' | 'blocked';
@@ -69,6 +73,7 @@ export interface RoundResult {
 }
 
 export type LogEntry =
+  | { readonly kind: 'loco'; readonly player: Player; readonly tile: TileId }
   | {
       readonly kind: 'place';
       readonly player: Player;
@@ -107,7 +112,10 @@ export interface GameState {
   readonly phase: Phase;
   /** Номер раунда, с 0. */
   readonly round: number;
-  /** Число локомотива: дубль loco-loco лежит в центре, в раздаче его нет. */
+  /**
+   * Число локомотива раунда. Сам дубль loco-loco участвует в раздаче: он на
+   * руке или в базаре, пока phase='loco', и в центре стола — после.
+   */
   readonly loco: number;
   /** Руки игроков; индексы 0/1 — постоянные на весь матч. */
   readonly hands: readonly [readonly TileId[], readonly TileId[]];
@@ -123,7 +131,7 @@ export interface GameState {
   readonly history: readonly Move[];
   /** Открытый дубль, который обязан закрыть текущий игрок. */
   readonly openDouble: OpenDouble | null;
-  /** Вытянутая из базара кость, которой игрок обязан сходить. */
+  /** Вытянутая из базара кость, которой игрок обязан сходить (в фазе loco не используется). */
   readonly mustPlay: TileId | null;
   /** Подряд идущие пасы: два — игра заблокирована. */
   readonly passStreak: number;
@@ -135,6 +143,8 @@ export interface GameState {
 }
 
 export type Move =
+  /** Выставить локомотив раунда (только в фазе loco). */
+  | { readonly type: 'loco'; readonly t?: number }
   | {
       readonly type: 'place';
       readonly tile: TileId;

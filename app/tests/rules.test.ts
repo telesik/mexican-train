@@ -8,13 +8,14 @@ import {
   fullSet,
   legalMoves,
   locoOf,
+  locoTile,
   moveEquals,
   newRound,
   ownTrain,
   otherPlayer,
   trainsForTile,
 } from '../src/engine';
-import { DRAW, PASS, allTiles, makeState, place } from './helpers';
+import { DRAW, LOCO, PASS, allTiles, makeState, place } from './helpers';
 
 describe('раздача', () => {
   it('локомотив раунда: 6-6 в первом, 0-0 в седьмом', () => {
@@ -27,22 +28,22 @@ describe('раздача', () => {
     expect(() => locoOf(1.5)).toThrow('Нет такого раунда');
   });
 
-  it('по 7 костей на руку, 13 в базаре, локомотива в раздаче нет', () => {
+  it('по 7 костей на руку, 14 в базаре, дубль раунда участвует в раздаче', () => {
     for (let round = 0; round < 7; round++) {
       const s = newRound({ seed: 100 + round, first: 0, round, variant: BASE_VARIANT });
-      const loco = `${6 - round}-${6 - round}`;
       expect(s.loco).toBe(6 - round);
+      expect(locoTile(s.loco)).toBe(`${6 - round}-${6 - round}`);
       expect(s.hands[0]).toHaveLength(7);
       expect(s.hands[1]).toHaveLength(7);
-      expect(s.boneyard).toHaveLength(13);
-      expect(allTiles(s)).not.toContain(loco);
-      expect([...allTiles(s), loco].sort()).toEqual(fullSet().sort());
+      expect(s.boneyard).toHaveLength(14);
+      expect(allTiles(s)).toContain(locoTile(s.loco));
+      expect(allTiles(s).sort()).toEqual(fullSet().sort());
     }
   });
 
-  it('стартовое состояние: поезда пусты и смотрят на локомотив, личные закрыты, мексиканский открыт', () => {
+  it('стартовое состояние: локомотив не выставлен, поезда пусты, личные закрыты, мексиканский открыт', () => {
     const s = newRound({ seed: 7, first: 1, round: 2, variant: BASE_VARIANT });
-    expect(s.phase).toBe('main');
+    expect(s.phase).toBe('loco');
     expect(s.current).toBe(1);
     expect(s.first).toBe(1);
     expect(s.trains.p0).toEqual({ tiles: [], end: 4, open: false });
@@ -68,6 +69,91 @@ describe('раздача', () => {
     expect(ownTrain(1)).toBe('p1');
     expect(otherPlayer(0)).toBe(1);
     expect(otherPlayer(1)).toBe(0);
+  });
+});
+
+describe('локомотив раунда', () => {
+  it('дубль раунда на руке — игрок выставляет его и делает первый ход', () => {
+    const s = makeState({ hands: [['6-6', '6-3', '2-1'], ['5-1']], boneyard: ['4-4'], phase: 'loco' });
+    expect(legalMoves(s)).toEqual([LOCO]);
+    const n = applyMove(s, { type: 'loco', t: 700 });
+    expect(n.phase).toBe('main');
+    expect(n.hands[0]).toEqual(['6-3', '2-1']);
+    expect(n.current).toBe(0);
+    expect(n.history).toEqual([{ type: 'loco', t: 700 }]);
+    expect(n.log).toEqual([{ kind: 'loco', player: 0, tile: '6-6' }]);
+    expect(legalMoves(n)).toEqual([place('6-3', 'p0'), place('6-3', 'mx')]);
+  });
+
+  it('второй игрок выставляет локомотив: рука первого не меняется', () => {
+    const s = makeState({ hands: [['2-1'], ['6-6', '5-1']], phase: 'loco', current: 1 });
+    const n = applyMove(s, LOCO);
+    expect(n.hands).toEqual([['2-1'], ['5-1']]);
+    expect(n.current).toBe(1);
+  });
+
+  it('нужного дубля нет — только добор; вытянул не тот — кость на руке, ход сопернику, поезд не открывается', () => {
+    const s = makeState({ hands: [['6-3'], ['5-1']], boneyard: ['4-4', '6-6'], phase: 'loco' });
+    expect(legalMoves(s)).toEqual([DRAW]);
+    const n = applyMove(s, DRAW);
+    expect(n.phase).toBe('loco');
+    expect(n.hands[0]).toEqual(['6-3', '4-4']);
+    expect(n.boneyard).toEqual(['6-6']);
+    expect(n.current).toBe(1);
+    expect(n.trains.p0.open).toBe(false);
+    expect(n.mustPlay).toBeNull();
+    expect(n.log).toEqual([{ kind: 'draw', player: 0, tile: '4-4', playable: false }]);
+  });
+
+  it('вытянул нужный дубль — остаётся при ходе и выставляет его', () => {
+    const s = makeState({ hands: [['6-3'], ['5-1']], boneyard: ['6-6', '4-4'], phase: 'loco' });
+    const n = applyMove(s, DRAW);
+    expect(n.current).toBe(0);
+    expect(n.log).toEqual([{ kind: 'draw', player: 0, tile: '6-6', playable: true }]);
+    expect(legalMoves(n)).toEqual([LOCO]);
+    expect(applyMove(n, LOCO).phase).toBe('main');
+  });
+
+  it('по кругу, пока дубль не найдётся: тянут по очереди', () => {
+    const s = makeState({
+      hands: [['6-3'], ['5-1']],
+      boneyard: ['4-4', '2-0', '1-1', '6-6'],
+      phase: 'loco',
+    });
+    let n = applyMove(s, DRAW); // игрок 0: 4-4
+    n = applyMove(n, DRAW); // игрок 1: 2-0
+    n = applyMove(n, DRAW); // игрок 0: 1-1
+    expect(n.current).toBe(1);
+    n = applyMove(n, DRAW); // игрок 1: 6-6
+    expect(n.current).toBe(1);
+    n = applyMove(n, LOCO);
+    expect(n.phase).toBe('main');
+    expect(n.current).toBe(1);
+    expect(n.hands).toEqual([['6-3', '4-4', '1-1'], ['5-1', '2-0']]);
+  });
+
+  it('пока локомотив не выставлен, класть кости и пасовать нельзя; в игре выставлять локомотив нельзя', () => {
+    const s = makeState({ hands: [['6-6', '6-3'], ['5-1']], phase: 'loco' });
+    expect(() => applyMove(s, place('6-3', 'p0'))).toThrow('Нелегальный ход');
+    expect(() => applyMove(s, PASS)).toThrow('Нелегальный ход');
+    expect(() => applyMove(s, DRAW)).toThrow('Нелегальный ход');
+    const main = makeState({ hands: [['6-3'], ['5-1']] });
+    expect(() => applyMove(main, LOCO)).toThrow('Нелегальный ход');
+  });
+
+  it('раунд после раздачи: локомотив всегда находится, игра начинается', () => {
+    for (let seed = 1; seed <= 50; seed++) {
+      let s = newRound({ seed, first: (seed % 2) as 0 | 1, round: seed % 7, variant: BASE_VARIANT });
+      let guard = 0;
+      while (s.phase === 'loco') {
+        expect(++guard).toBeLessThan(20);
+        s = applyMove(s, legalMoves(s)[0]!);
+      }
+      expect(s.phase).toBe('main');
+      expect(allTiles(s).sort()).toEqual(fullSet().sort());
+      // Первый ход — у выставившего локомотив.
+      expect(s.log.at(-1)).toMatchObject({ kind: 'loco', player: s.current });
+    }
   });
 });
 
@@ -115,6 +201,8 @@ describe('легальные ходы', () => {
     expect(moveEquals({ type: 'draw', t: 5 }, DRAW)).toBe(true);
     expect(moveEquals(DRAW, PASS)).toBe(false);
     expect(moveEquals(place('6-1', 'p0'), DRAW)).toBe(false);
+    expect(moveEquals({ type: 'loco', t: 3 }, LOCO)).toBe(true);
+    expect(moveEquals(LOCO, DRAW)).toBe(false);
   });
 });
 

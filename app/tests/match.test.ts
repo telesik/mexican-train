@@ -35,10 +35,11 @@ function playMatch(perRound: [number, number][]): MatchState {
 }
 
 describe('матч', () => {
-  it('старт: раунд 0 с локомотивом 6-6, счёт 0:0, бота нет', () => {
+  it('старт: раунд 0 с локомотивом 6-6 (ещё не выставлен), счёт 0:0, бота нет', () => {
     const m = startMatch({ names: ['А', 'Б'], first: 1, variant: BASE_VARIANT, seed: 5 });
     expect(m.round.round).toBe(0);
     expect(m.round.loco).toBe(6);
+    expect(m.round.phase).toBe('loco');
     expect(m.round.first).toBe(1);
     expect(m.round.seed).toBe(5);
     expect(m.totals).toEqual([0, 0]);

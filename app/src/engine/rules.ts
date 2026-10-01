@@ -1,8 +1,11 @@
 // Правила игры: раздача, перечисление легальных ходов, применение хода.
 //
 // Коротко (полный текст — docs/RULES.*):
-//  - набор 0–6; локомотив раунда (дубль) лежит в центре, по 7 костей на руку,
-//    13 в базаре;
+//  - набор 0–6, по 7 костей на руку, 14 в базаре;
+//  - раунд открывает локомотив — дубль раунда (6-6 в первом, 0-0 в седьмом):
+//    игрок выставляет его, а если дубля нет — тянет одну кость; не вытянул
+//    нужный — ход переходит сопернику, и так по кругу, пока дубль не
+//    найдётся; выставивший локомотив делает первый ход;
 //  - от локомотива идут личные поезда игроков и общий мексиканский;
 //  - ход — одна кость: на свой поезд, на мексиканский или на открытый
 //    поезд соперника; ходить нечем — добор одной кости: подошла — ею
@@ -52,24 +55,25 @@ export function locoOf(round: number): number {
   return ROUNDS - 1 - round;
 }
 
+/** Дубль-локомотив раунда. */
+export function locoTile(loco: number): TileId {
+  return tileId(loco, loco);
+}
+
 /**
- * Раздача: локомотив — в центр, остальные 27 костей перемешиваются, по 7 в
- * руки (первые семь — первому игроку), 13 в базар в порядке добора.
+ * Раздача: 28 костей перемешиваются, по 7 в руки (первые семь — первому
+ * игроку), 14 в базар в порядке добора. Локомотив ещё не выставлен.
  */
 export function newRound(opts: NewRoundOptions): GameState {
   const loco = locoOf(opts.round);
-  const locoTile = tileId(loco, loco);
-  const [deck] = shuffle(
-    fullSet().filter((t) => t !== locoTile),
-    opts.seed,
-  );
+  const [deck] = shuffle(fullSet(), opts.seed);
   const first = opts.first;
   const hands: [TileId[], TileId[]] = [[], []];
   hands[first] = deck.slice(0, HAND_SIZE);
   hands[otherPlayer(first)] = deck.slice(HAND_SIZE, 2 * HAND_SIZE);
   const empty = (open: boolean): Train => ({ tiles: [], end: loco, open });
   return {
-    phase: 'main',
+    phase: 'loco',
     round: opts.round,
     loco,
     hands: [hands[0], hands[1]],
@@ -105,12 +109,18 @@ export function trainsForTile(state: GameState, tile: TileId): TrainId[] {
 }
 
 /**
- * Все легальные ходы текущего игрока. Если есть хоть одна выкладка — только
- * выкладки (ходить обязан); иначе добор, а при пустом базаре — пас. Пустой
- * список только при phase='over'.
+ * Все легальные ходы текущего игрока. Пока локомотив не выставлен —
+ * выставить его, а без нужного дубля на руке — тянуть (дубль тогда в базаре,
+ * базар не пуст). Дальше: если есть хоть одна выкладка — только выкладки
+ * (ходить обязан); иначе добор, а при пустом базаре — пас. Пустой список
+ * только при phase='over'.
  */
 export function legalMoves(state: GameState): Move[] {
   if (state.phase === 'over') return [];
+  if (state.phase === 'loco') {
+    const holds = state.hands[state.current].includes(locoTile(state.loco));
+    return [holds ? { type: 'loco' } : { type: 'draw' }];
+  }
   const tiles = state.mustPlay ? [state.mustPlay] : state.hands[state.current];
   const moves: Move[] = [];
   for (const tile of tiles) {
@@ -141,10 +151,14 @@ export function applyMove(state: GameState, move: Move): GameState {
   }
   const history = [...state.history, move];
   switch (move.type) {
+    case 'loco':
+      return applyLoco({ ...state, history });
     case 'place':
       return applyPlace({ ...state, history }, move.tile, move.train);
     case 'draw':
-      return applyDraw({ ...state, history });
+      return state.phase === 'loco'
+        ? applyLocoDraw({ ...state, history })
+        : applyDraw({ ...state, history });
     case 'pass':
       return applyPass({ ...state, history });
   }
@@ -161,6 +175,40 @@ function finish(state: GameState, cause: RoundEndCause): GameState {
     mustPlay: null,
     result: scoreRound(state.hands, cause),
     log: [...state.log, { kind: 'end', cause }],
+  };
+}
+
+/** Локомотив выставлен: начинается обычная игра, первый ход — у выставившего. */
+function applyLoco(state: GameState): GameState {
+  const me = state.current;
+  const tile = locoTile(state.loco);
+  return {
+    ...state,
+    phase: 'main',
+    hands: withHand(
+      state,
+      me,
+      state.hands[me].filter((t) => t !== tile),
+    ),
+    log: [...state.log, { kind: 'loco', player: me, tile }],
+  };
+}
+
+/**
+ * Добор в поисках локомотива: вытянул нужный дубль — остаётся при ходе и
+ * выставляет его; нет — кость остаётся на руке, ход переходит сопернику.
+ */
+function applyLocoDraw(state: GameState): GameState {
+  const me = state.current;
+  // Нужного дубля нет на руках — он в базаре, базар не пуст.
+  const tile = state.boneyard[0]!;
+  const found = tile === locoTile(state.loco);
+  return {
+    ...state,
+    hands: withHand(state, me, [...state.hands[me], tile]),
+    boneyard: state.boneyard.slice(1),
+    current: found ? me : otherPlayer(me),
+    log: [...state.log, { kind: 'draw', player: me, tile, playable: found }],
   };
 }
 

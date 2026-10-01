@@ -6,7 +6,9 @@ import {
   legalMoves,
   type GameState,
   type Move,
+  locoTile,
   type OpenDouble,
+  type Phase,
   type Player,
   type TileId,
   type Train,
@@ -23,6 +25,7 @@ export function makeState(opts: {
   hands: [TileId[], TileId[]];
   boneyard?: TileId[];
   loco?: number;
+  phase?: Phase;
   trains?: Partial<Record<TrainId, TrainSpec>>;
   current?: Player;
   first?: Player;
@@ -37,7 +40,7 @@ export function makeState(opts: {
     open: opts.trains?.[id]?.open ?? open,
   });
   return {
-    phase: 'main',
+    phase: opts.phase ?? 'main',
     round: 6 - loco,
     loco,
     hands: [opts.hands[0], opts.hands[1]],
@@ -61,6 +64,7 @@ export function place(tile: TileId, train: TrainId): Move {
   return { type: 'place', tile, train };
 }
 
+export const LOCO: Move = { type: 'loco' };
 export const DRAW: Move = { type: 'draw' };
 export const PASS: Move = { type: 'pass' };
 
@@ -83,9 +87,10 @@ export function playout(start: GameState, rand: () => number, maxMoves = 500): G
   return state;
 }
 
-/** Все кости состояния: руки, базар, поезда — для проверки сохранения набора. */
+/** Все кости состояния: руки, базар, поезда и выставленный локомотив — для проверки сохранения набора. */
 export function allTiles(state: GameState): TileId[] {
   return [
+    ...(state.phase === 'loco' ? [] : [locoTile(state.loco)]),
     ...state.hands[0],
     ...state.hands[1],
     ...state.boneyard,

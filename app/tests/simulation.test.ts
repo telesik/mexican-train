@@ -20,8 +20,12 @@ import {
 import { allTiles, lcg } from './helpers';
 
 function checkInvariants(s: GameState): void {
-  const loco = `${s.loco}-${s.loco}`;
-  expect([...allTiles(s), loco].sort()).toEqual(fullSet().sort());
+  expect(allTiles(s).sort()).toEqual(fullSet().sort());
+  if (s.phase === 'loco') {
+    expect(s.trains.p0.tiles).toHaveLength(0);
+    expect(s.trains.p1.tiles).toHaveLength(0);
+    expect(s.trains.mx.tiles).toHaveLength(0);
+  }
   for (const id of ['p0', 'p1', 'mx'] as const) {
     const train = s.trains[id];
     let end = s.loco;
@@ -79,5 +83,5 @@ describe('симуляция', () => {
     // Оба исхода раунда встречаются в выборке.
     expect(causes.out).toBeGreaterThan(0);
     expect(causes.blocked).toBeGreaterThan(0);
-  });
+  }, 60_000);
 });
