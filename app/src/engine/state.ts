@@ -84,6 +84,8 @@ export type LogEntry =
     }
   | { readonly kind: 'draw'; readonly player: Player; readonly tile: TileId; readonly playable: boolean }
   | { readonly kind: 'pass'; readonly player: Player }
+  /** Выложен «мёртвый» дубль: продолжить его нечем, поезд на нём закончен. */
+  | { readonly kind: 'dead'; readonly train: TrainId }
   | { readonly kind: 'open'; readonly train: TrainId }
   | { readonly kind: 'close'; readonly train: TrainId }
   | { readonly kind: 'end'; readonly cause: RoundEndCause };

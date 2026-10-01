@@ -6,6 +6,7 @@ import {
   allowedTrains,
   applyMove,
   fullSet,
+  isTrainDead,
   legalMoves,
   locoOf,
   locoTile,
@@ -14,6 +15,7 @@ import {
   ownTrain,
   otherPlayer,
   trainsForTile,
+  valueExhausted,
 } from '../src/engine';
 import { DRAW, LOCO, PASS, allTiles, makeState, place } from './helpers';
 
@@ -399,6 +401,80 @@ describe('дубли', () => {
     // Владелец сыграл на свой поезд — он закрылся.
     expect(n.trains.p0.open).toBe(false);
     expect(n.openDouble).toBeNull();
+  });
+});
+
+describe('мёртвый дубль', () => {
+  // Пять костей с тройкой лежат на мексиканском поезде, шестая (3-6) — на
+  // своём: к дублю 3-3 приставить больше нечего.
+  const table = { mx: { tiles: ['3-0', '3-1', '3-2', '4-3', '5-3'] as const, end: 5 } };
+
+  it('к дублю приставить нечего — он обычная кость: ход переходит, поезд не открывается', () => {
+    const s = makeState({
+      hands: [['3-3', '6-1'], ['5-4', '2-2']],
+      boneyard: ['1-0'],
+      trains: { ...table, p0: { tiles: ['6-3'], end: 3 } },
+    });
+    const n = applyMove(s, place('3-3', 'p0'));
+    expect(n.openDouble).toBeNull();
+    expect(n.current).toBe(1);
+    expect(n.trains.p0.open).toBe(false);
+    expect(n.boneyard).toEqual(['1-0']);
+    expect(n.log).toEqual([
+      { kind: 'place', player: 0, tile: '3-3', train: 'p0', covers: false },
+      { kind: 'dead', train: 'p0' },
+    ]);
+    // Соперник играет свободно: обязанности закрывать нет.
+    expect(legalMoves(n)).toEqual([place('5-4', 'mx')]);
+  });
+
+  it('поезд с мёртвым дублем закончен: владельцу остаются мексиканский и открытый поезд соперника', () => {
+    const s = makeState({
+      hands: [['3-3', '5-1', '6-4'], ['5-4', '2-2']],
+      trains: { ...table, p0: { tiles: ['6-3'], end: 3 }, p1: { open: true } },
+    });
+    const n = applyMove(applyMove(s, place('3-3', 'p0')), place('5-4', 'mx'));
+    expect(isTrainDead(n, 'p0')).toBe(true);
+    expect(isTrainDead(n, 'p1')).toBe(false);
+    expect(n.current).toBe(0);
+    expect(legalMoves(n)).toEqual([place('6-4', 'p1'), place('6-4', 'mx')]);
+  });
+
+  it('мёртвый дубль последней костью заканчивает раунд сразу', () => {
+    const s = makeState({
+      hands: [['3-3'], ['5-4']],
+      trains: { ...table, p0: { tiles: ['6-3'], end: 3 } },
+    });
+    const n = applyMove(s, place('3-3', 'p0'));
+    expect(n.phase).toBe('over');
+    expect(n.result).toEqual({ cause: 'out', sums: [0, 9], added: [0, 9], winner: 0 });
+  });
+
+  it('хотя бы одна кость с этим числом не на столе — дубль обычный, закрывать обязаны', () => {
+    // 3-6 не на столе: она на руке у соперника.
+    const s = makeState({
+      hands: [['3-3', '6-1'], ['6-3']],
+      boneyard: ['1-0'],
+      trains: { ...table, p0: { end: 3 } },
+    });
+    const n = applyMove(s, place('3-3', 'p0'));
+    expect(n.openDouble).toEqual({ train: 'p0', value: 3, by: 0 });
+    expect(n.current).toBe(0);
+    expect(legalMoves(n)).toEqual([DRAW]);
+  });
+
+  it('число локомотива: выставленный локомотив считается костью на столе', () => {
+    // Все шесть костей с шестёркой, кроме самого 6-6, лежат в поездах.
+    const trains = { mx: { tiles: ['6-0', '6-1', '6-2', '6-3', '6-4', '6-5'] as const, end: 5 } };
+    const main = makeState({ hands: [['5-1'], ['4-4']], trains });
+    expect(valueExhausted(main, 6)).toBe(true);
+    // Пустые личные поезда смотрят на локомотив — начать их уже нечем.
+    expect(isTrainDead(main, 'p0')).toBe(true);
+    expect(isTrainDead(main, 'mx')).toBe(false);
+    // Пока локомотив не выставлен, 6-6 ещё не на столе.
+    const loco = makeState({ hands: [['6-6'], ['4-4']], trains, phase: 'loco' });
+    expect(valueExhausted(loco, 6)).toBe(false);
+    expect(valueExhausted(main, 5)).toBe(false);
   });
 });
 

@@ -13,6 +13,9 @@
 //  - дубль обязан закрыть тот же игрок следующей костью; не закрыл — его
 //    поезд открывается, а закрыть обязан соперник; пока дубль открыт,
 //    играть можно только на него;
+//  - «мёртвый» дубль — тот, к которому приставить уже нечего (все шесть
+//    остальных костей с его числом на столе): он считается обычной костью,
+//    закрывать его не нужно, поезд на нём закончен;
 //  - раунд кончается, когда рука пуста и открытых дублей нет, либо когда
 //    базар пуст и ходов нет ни у кого.
 
@@ -91,6 +94,32 @@ export function newRound(opts: NewRoundOptions): GameState {
     result: null,
     log: [],
   };
+}
+
+// ---------------------------------------------------------------------------
+// Кости на столе
+
+/** Костей с числом v в наборе: дубль и шесть остальных. */
+const TILES_PER_VALUE = 7;
+
+/**
+ * Все ли кости с числом v уже лежат на столе (в поездах и в центре —
+ * выставленный локомотив). Видно обоим игрокам: на руках и в базаре таких
+ * костей не осталось.
+ */
+export function valueExhausted(state: GameState, v: number): boolean {
+  let count = state.phase !== 'loco' && v === state.loco ? 1 : 0;
+  for (const id of TRAIN_IDS) {
+    for (const p of state.trains[id].tiles) {
+      if (hasValue(p.tile, v)) count++;
+    }
+  }
+  return count === TILES_PER_VALUE;
+}
+
+/** Поезд закончен: к его концу больше нечего приставить. */
+export function isTrainDead(state: GameState, id: TrainId): boolean {
+  return valueExhausted(state, state.trains[id].end);
 }
 
 // ---------------------------------------------------------------------------
@@ -243,17 +272,22 @@ function applyPlace(state: GameState, tile: TileId, trainId: TrainId): GameState
     openDouble: null,
     log,
   };
+  let placed = next;
   if (isDouble(tile)) {
-    // Дубль закрывает тот же игрок: ход не переходит. Это верно и для
-    // последней кости на руке — раунд не кончается, пока дубль открыт.
-    return { ...next, openDouble: { train: trainId, value: outer, by: me } };
+    if (!valueExhausted(next, outer)) {
+      // Дубль закрывает тот же игрок: ход не переходит. Это верно и для
+      // последней кости на руке — раунд не кончается, пока дубль открыт.
+      return { ...next, openDouble: { train: trainId, value: outer, by: me } };
+    }
+    // «Мёртвый» дубль: продолжить его нечем — дальше как обычная кость.
+    placed = { ...next, log: [...log, { kind: 'dead', train: trainId }] };
   }
   // Рука пуста и открытых дублей нет — раунд окончен. Пустой может быть и
   // рука соперника: он выложил дубль последней костью, а мы его закрыли.
-  if (hand.length === 0 || next.hands[otherPlayer(me)].length === 0) {
-    return finish(next, 'out');
+  if (hand.length === 0 || placed.hands[otherPlayer(me)].length === 0) {
+    return finish(placed, 'out');
   }
-  return { ...next, current: otherPlayer(me) };
+  return { ...placed, current: otherPlayer(me) };
 }
 
 /** Игрок не смог сходить: его поезд открывается, ход (и открытый дубль) переходит. */

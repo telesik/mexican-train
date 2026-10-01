@@ -7,6 +7,7 @@ import {
   type GameState,
   type Move,
   locoTile,
+  parseTile,
   type OpenDouble,
   type Phase,
   type Player,
@@ -18,9 +19,11 @@ import {
 export interface TrainSpec {
   readonly end?: number;
   readonly open?: boolean;
+  /** Кости, уже лежащие в поезде (порядок и стыковка для тестов не важны). */
+  readonly tiles?: readonly TileId[];
 }
 
-/** Собрать состояние раунда вручную. Поезда пустые (без истории костей), но с нужными концами. */
+/** Собрать состояние раунда вручную: руки, базар, концы поездов и, при надобности, кости на столе. */
 export function makeState(opts: {
   hands: [TileId[], TileId[]];
   boneyard?: TileId[];
@@ -35,7 +38,10 @@ export function makeState(opts: {
 }): GameState {
   const loco = opts.loco ?? 6;
   const train = (id: TrainId, open: boolean): Train => ({
-    tiles: [],
+    tiles: (opts.trains?.[id]?.tiles ?? []).map((tile, seq) => {
+      const { hi, lo } = parseTile(tile);
+      return { tile, values: [hi, lo] as const, by: 0 as const, seq };
+    }),
     end: opts.trains?.[id]?.end ?? loco,
     open: opts.trains?.[id]?.open ?? open,
   });

@@ -12,6 +12,7 @@ import {
   isDouble,
   legalMoves,
   matchProtocol,
+  valueExhausted,
   nextRound,
   startMatch,
   validateProtocol,
@@ -40,6 +41,8 @@ function checkInvariants(s: GameState): void {
     const last = s.trains[s.openDouble.train].tiles.at(-1)!;
     expect(isDouble(last.tile)).toBe(true);
     expect(s.trains[s.openDouble.train].end).toBe(s.openDouble.value);
+    // Открытый дубль всегда можно закрыть: кость с его числом есть на руках или в базаре.
+    expect(valueExhausted(s, s.openDouble.value)).toBe(false);
   }
   if (s.mustPlay) expect(s.hands[s.current]).toContain(s.mustPlay);
 }
