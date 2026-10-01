@@ -1,0 +1,90 @@
+# Публикация игры на GitHub Pages: https://telesik.github.io/<имя репозитория>/
+# Деплой идёт напрямую из Actions-артефакта — ветка gh-pages не используется,
+# собранные файлы в git не попадают.
+#
+# Схема: main — текущий релиз, живёт в корне сайта; каждая ветка feature/*
+# собирается в подкаталог /<имя репозитория>/<версия из app/package.json этой
+# ветки>/. Любой пуш в main или feature/* пересобирает сайт целиком: корень —
+# из main, подкаталоги — из вершин всех feature-веток. Пока в main нет
+# приложения (до первого релиза), корень сайта не собирается.
+
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+      - 'feature/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Один деплой за раз; новый пуш отменяет недоехавший предыдущий.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          # Общие модули — подмодуль commons/ (telesik-web-commons).
+          submodules: recursive
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      # Сайт живёт на подпути /<имя репозитория>/ (берётся из контекста Actions),
+      # поэтому base передаётся флагом только здесь — локальные npm run
+      # dev/build не затронуты.
+      - name: Build main (релиз, корень сайта)
+        run: |
+          set -euo pipefail
+          mkdir -p _site
+          if [ ! -f app/index.html ]; then
+            echo "в main ещё нет приложения — корень сайта не собирается"; exit 0
+          fi
+          (cd app && npm ci && npm run build -- --base=/${{ github.event.repository.name }}/)
+          cp -R app/dist/. _site/
+      - name: Build feature branches (подкаталоги по версиям веток)
+        run: |
+          set -euo pipefail
+          for ref in $(git for-each-ref --format='%(refname:short)' 'refs/remotes/origin/feature/*'); do
+            echo "=== building $ref"
+            wt="$(mktemp -d)"
+            git worktree add --force "$wt" "$ref"
+            if [ ! -f "$wt/app/index.html" ]; then
+              echo "у ветки $ref нет приложения — пропуск"; git worktree remove --force "$wt"; continue
+            fi
+            # В новом рабочем дереве подмодули пусты — поднять.
+            git -C "$wt" submodule update --init --recursive
+            ver="$(node -p "require('$wt/app/package.json').version")"
+            if [ -z "$ver" ] || [ "$ver" = "undefined" ]; then
+              echo "у ветки $ref нет версии в app/package.json — пропуск"; git worktree remove --force "$wt"; continue
+            fi
+            (cd "$wt/app" && npm ci && npm run build -- --base=/${{ github.event.repository.name }}/"$ver"/)
+            mkdir -p "_site/$ver"
+            cp -R "$wt/app/dist/." "_site/$ver/"
+            git worktree remove --force "$wt"
+            echo "=== $ref → /${{ github.event.repository.name }}/$ver/"
+          done
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
