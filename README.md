@@ -8,9 +8,11 @@ variants of the game will live in this same repository as modes of one app.
 домино 0–6 (28 костей), **два игрока**. Правила адаптированы под малый набор;
 будущие варианты игры — режимы этого же приложения в этом же репозитории.
 
-- Web version — coming soon.
-- Rules — coming soon (`docs/RULES.<lang>.md`), 12 languages as in
-  [Dofodo](https://github.com/telesik/dofodo).
+- Rules — [English](docs/RULES.en.md) · [русский](docs/RULES.ru.md) (the
+  Russian text is the primary version); more languages will follow.
+- Web version — source in `app/` (play against a bot at three levels,
+  interface in 11 languages); a hosted version is coming soon. To run it
+  locally: `cd app && npm install && npm run dev`.
 - Mobile app (iOS / Android) — separate private repository.
 - Shared code of telesik domino games — git submodule `commons/`
   ([telesik-web-commons](https://github.com/telesik/telesik-web-commons));
