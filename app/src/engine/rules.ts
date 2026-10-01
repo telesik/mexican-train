@@ -280,7 +280,15 @@ function applyPlace(state: GameState, tile: TileId, trainId: TrainId): GameState
       return { ...next, openDouble: { train: trainId, value: outer, by: me } };
     }
     // «Мёртвый» дубль: продолжить его нечем — дальше как обычная кость.
-    placed = { ...next, log: [...log, { kind: 'dead', train: trainId }] };
+    // Помечаем саму кость: стол кладёт её рубашкой вверх.
+    const grown = next.trains[trainId];
+    const lastIndex = grown.tiles.length - 1;
+    const tiles = grown.tiles.map((p, i) => (i === lastIndex ? { ...p, dead: true as const } : p));
+    placed = {
+      ...next,
+      trains: { ...next.trains, [trainId]: { ...grown, tiles } },
+      log: [...log, { kind: 'dead', train: trainId }],
+    };
   }
   // Рука пуста и открытых дублей нет — раунд окончен. Пустой может быть и
   // рука соперника: он выложил дубль последней костью, а мы его закрыли.

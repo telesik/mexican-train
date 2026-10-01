@@ -39,6 +39,11 @@ export interface PlacedTile {
   readonly by: Player;
   /** Сквозной порядковый номер выкладывания в раунде, с 0. */
   readonly seq: number;
+  /**
+   * «Мёртвый» дубль: приставить к нему нечего. На столе лежит поперёк
+   * рубашкой вверх; поезд на нём закончен.
+   */
+  readonly dead?: true;
 }
 
 export interface Train {

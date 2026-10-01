@@ -420,6 +420,9 @@ describe('мёртвый дубль', () => {
     expect(n.current).toBe(1);
     expect(n.trains.p0.open).toBe(false);
     expect(n.boneyard).toEqual(['1-0']);
+    // Кость помечена: стол кладёт её рубашкой вверх поперёк.
+    expect(n.trains.p0.tiles.at(-1)).toEqual({ tile: '3-3', values: [3, 3], by: 0, seq: 0, dead: true });
+    expect(n.trains.p0.tiles[0]!.dead).toBeUndefined();
     expect(n.log).toEqual([
       { kind: 'place', player: 0, tile: '3-3', train: 'p0', covers: false },
       { kind: 'dead', train: 'p0' },
@@ -460,6 +463,7 @@ describe('мёртвый дубль', () => {
     const n = applyMove(s, place('3-3', 'p0'));
     expect(n.openDouble).toEqual({ train: 'p0', value: 3, by: 0 });
     expect(n.current).toBe(0);
+    expect(n.trains.p0.tiles.at(-1)!.dead).toBeUndefined();
     expect(legalMoves(n)).toEqual([DRAW]);
   });
 

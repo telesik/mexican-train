@@ -100,13 +100,16 @@ export function finishRound(match: MatchState): MatchState {
 }
 
 /**
- * Начать следующий раунд: очередь выставлять локомотив переходит к другому
- * игроку (в первом раунде её определяет жребий).
+ * Начать следующий раунд: первым выставляет локомотив (или тянет) победитель
+ * предыдущего раунда; если победителя не было (поровну) — очередь переходит
+ * к другому игроку. В первом раунде первого определяет жребий.
  */
 export function nextRound(match: MatchState, seed?: RngState): MatchState {
   if (match.outcome) throw new Error('Матч окончен');
   if (match.rounds.length !== match.round.round + 1) throw new Error('Текущий раунд не учтён');
-  const first = otherPlayer(match.first);
+  // Проверка выше гарантирует, что последний учтённый раунд есть.
+  const last = match.rounds[match.rounds.length - 1]!;
+  const first = last.winner ?? otherPlayer(last.first);
   return {
     ...match,
     first,

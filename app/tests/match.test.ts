@@ -76,18 +76,28 @@ describe('матч', () => {
     expect(done.outcome).toBeNull();
   });
 
-  it('следующий раунд: локомотив на единицу меньше, первый ход переходит к другому', () => {
+  it('следующий раунд: локомотив на единицу меньше, начинает победитель предыдущего', () => {
     const m = startMatch({ names: ['А', 'Б'], first: 0, variant: BASE_VARIANT, seed: 1 });
-    const next = nextRound(finishRound(withResult(m, [0, 9])), 77);
+    // Раунд начинал игрок 0, выиграл игрок 1 — он и начинает следующий.
+    const next = nextRound(finishRound(withResult(m, [9, 0])), 77);
     expect(next.round.round).toBe(1);
     expect(next.round.loco).toBe(5);
     expect(next.first).toBe(1);
     expect(next.round.first).toBe(1);
+    expect(next.round.current).toBe(1);
     expect(next.round.seed).toBe(77);
+    // Снова выиграл игрок 1 — начинает опять он.
     const third = nextRound(finishRound(withResult(next, [4, 0])));
-    expect(third.first).toBe(0);
+    expect(third.first).toBe(1);
     expect(third.round.loco).toBe(4);
     expect(Number.isInteger(third.round.seed)).toBe(true);
+  });
+
+  it('в раунде поровну — победителя нет, начинать переходит к другому игроку', () => {
+    const m = startMatch({ names: ['А', 'Б'], first: 0, variant: BASE_VARIANT, seed: 1 });
+    expect(nextRound(finishRound(withResult(m, [5, 5])), 2).first).toBe(1);
+    const m1 = startMatch({ names: ['А', 'Б'], first: 1, variant: BASE_VARIANT, seed: 1 });
+    expect(nextRound(finishRound(withResult(m1, [5, 5])), 2).first).toBe(0);
   });
 
   it('следующий раунд нельзя начать, пока текущий не учтён', () => {

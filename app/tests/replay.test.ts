@@ -33,7 +33,9 @@ describe('протокол', () => {
     expect(p.rounds).toHaveLength(2);
     expect(p.rounds[0]).toMatchObject({ round: 0, seed: 11, first: 0 });
     expect(p.rounds[0]!.result).toBeDefined();
-    expect(p.rounds[1]).toEqual({ round: 1, seed: 12, first: 1, moves: match.round.history });
+    // Второй раунд начинает победитель первого (при равенстве — другой игрок).
+    expect(p.rounds[1]).toEqual({ round: 1, seed: 12, first: match.first, moves: match.round.history });
+    expect(match.first).toBe(match.rounds[0]!.winner ?? 1);
   });
 
   it('учтённый, но ещё не сменённый раунд в протокол дважды не попадает', () => {
