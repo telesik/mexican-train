@@ -8,10 +8,16 @@ variants of the game will live in this same repository as modes of one app.
 домино 0–6 (28 костей), **два игрока**. Правила адаптированы под малый набор;
 будущие варианты игры — режимы этого же приложения в этом же репозитории.
 
-- Web version — coming soon.
-- Rules — coming soon (`docs/RULES.<lang>.md`), 12 languages as in
-  [Dofodo](https://github.com/telesik/dofodo).
+- Rules — [English](docs/RULES.en.md) · [русский](docs/RULES.ru.md) (the
+  Russian text is the primary version); more languages will follow.
+- **Play in the browser: <https://telesik.github.io/mexican-train/>** — against
+  a bot at three levels, interface in 11 languages, no ads, no accounts, no
+  data collection. Source in `app/`; to run it locally:
+  `cd app && npm install && npm run dev`.
 - Mobile app (iOS / Android) — separate private repository.
+- Shared code of telesik domino games — git submodule `commons/`
+  ([telesik-web-commons](https://github.com/telesik/telesik-web-commons));
+  clone with `git clone --recurse-submodules` or run `git submodule update --init`.
 
 Mexican Train is a traditional game (first published in 1994; many editions
 since). This project is an independent interpretation; it is not affiliated
