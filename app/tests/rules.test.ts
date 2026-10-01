@@ -104,14 +104,14 @@ describe('локомотив раунда', () => {
     expect(n.current).toBe(1);
     expect(n.trains.p0.open).toBe(false);
     expect(n.mustPlay).toBeNull();
-    expect(n.log).toEqual([{ kind: 'draw', player: 0, tile: '4-4', playable: false }]);
+    expect(n.log).toEqual([{ kind: 'draw', player: 0, tile: '4-4', playable: false, lacks: [] }]);
   });
 
   it('вытянул нужный дубль — остаётся при ходе и выставляет его', () => {
     const s = makeState({ hands: [['6-3'], ['5-1']], boneyard: ['6-6', '4-4'], phase: 'loco' });
     const n = applyMove(s, DRAW);
     expect(n.current).toBe(0);
-    expect(n.log).toEqual([{ kind: 'draw', player: 0, tile: '6-6', playable: true }]);
+    expect(n.log).toEqual([{ kind: 'draw', player: 0, tile: '6-6', playable: true, lacks: [] }]);
     expect(legalMoves(n)).toEqual([LOCO]);
     expect(applyMove(n, LOCO).phase).toBe('main');
   });
@@ -258,7 +258,7 @@ describe('добор и открытые поезда', () => {
     expect(n.current).toBe(0);
     expect(n.trains.p0.open).toBe(false);
     expect(legalMoves(n)).toEqual([place('6-5', 'p0'), place('6-5', 'mx')]);
-    expect(n.log).toEqual([{ kind: 'draw', player: 0, tile: '6-5', playable: true }]);
+    expect(n.log).toEqual([{ kind: 'draw', player: 0, tile: '6-5', playable: true, lacks: [6] }]);
     const m = applyMove(n, place('6-5', 'mx'));
     expect(m.mustPlay).toBeNull();
     expect(m.current).toBe(1);
@@ -280,7 +280,7 @@ describe('добор и открытые поезда', () => {
     expect(n.trains.p0.open).toBe(true);
     expect(n.current).toBe(1);
     expect(n.log).toEqual([
-      { kind: 'draw', player: 0, tile: '2-2', playable: false },
+      { kind: 'draw', player: 0, tile: '2-2', playable: false, lacks: [6] },
       { kind: 'open', train: 'p0' },
     ]);
   });
@@ -291,7 +291,7 @@ describe('добор и открытые поезда', () => {
     expect(n.trains.p0.open).toBe(true);
     expect(n.current).toBe(1);
     expect(n.passStreak).toBe(1);
-    expect(n.log).toEqual([{ kind: 'pass', player: 0 }]);
+    expect(n.log).toEqual([{ kind: 'pass', player: 0, lacks: [6] }]);
   });
 
   it('соперник играет на открытый поезд — поезд остаётся открытым', () => {

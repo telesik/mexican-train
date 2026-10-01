@@ -45,7 +45,7 @@ export interface MatchState {
   readonly first: Player;
   readonly round: GameState;
   readonly outcome: MatchOutcome | null;
-  /** Бот за одной из сторон; null — двое людей на одном устройстве или по сети. */
+  /** Бот за одной из сторон; null — соперник-человек (партия по сети). */
   readonly bot: BotSeat | null;
 }
 

@@ -5,3 +5,4 @@ export * from './rules';
 export * from './score';
 export * from './match';
 export * from './replay';
+export * from './bot';

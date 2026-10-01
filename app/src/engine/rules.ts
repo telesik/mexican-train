@@ -132,6 +132,11 @@ export function allowedTrains(state: GameState): TrainId[] {
   return TRAIN_IDS.filter((id) => id === own || state.trains[id].open);
 }
 
+/** Числа на концах поездов, доступных текущему игроку (без повторов). */
+function openEnds(state: GameState): number[] {
+  return [...new Set(allowedTrains(state).map((id) => state.trains[id].end))];
+}
+
 /** Поезда, на которые текущий игрок может положить именно эту кость. */
 export function trainsForTile(state: GameState, tile: TileId): TrainId[] {
   return allowedTrains(state).filter((id) => hasValue(tile, state.trains[id].end));
@@ -237,7 +242,7 @@ function applyLocoDraw(state: GameState): GameState {
     hands: withHand(state, me, [...state.hands[me], tile]),
     boneyard: state.boneyard.slice(1),
     current: found ? me : otherPlayer(me),
-    log: [...state.log, { kind: 'draw', player: me, tile, playable: found }],
+    log: [...state.log, { kind: 'draw', player: me, tile, playable: found, lacks: [] }],
   };
 }
 
@@ -326,7 +331,8 @@ function applyDraw(state: GameState): GameState {
   const playable = trainsForTile(drawn, tile).length > 0;
   const logged: GameState = {
     ...drawn,
-    log: [...state.log, { kind: 'draw', player: me, tile, playable }],
+    // Тянул — значит, к доступным концам на руке ничего не было.
+    log: [...state.log, { kind: 'draw', player: me, tile, playable, lacks: openEnds(state) }],
   };
   // Подошла — ею обязаны сходить сразу; нет — остаётся на руке, ход переходит.
   return playable ? { ...logged, mustPlay: tile } : failTurn(logged);
@@ -337,7 +343,7 @@ function applyPass(state: GameState): GameState {
   const passed = failTurn({
     ...state,
     passStreak,
-    log: [...state.log, { kind: 'pass', player: state.current }],
+    log: [...state.log, { kind: 'pass', player: state.current, lacks: openEnds(state) }],
   });
   // Базар пуст, и подряд спасовали оба — игра заблокирована.
   return passStreak >= 2 ? finish(passed, 'blocked') : passed;
