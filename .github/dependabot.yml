@@ -1,0 +1,21 @@
+# Dependabot. Выдержка новых версий — 7 дней (cooldown).
+# npm — только алерты уязвимостей: PR обновлений версий не открываются
+# (open-pull-requests-limit: 0), версии поднимаем сами, с выдержкой
+# min-release-age из .npmrc.
+# github-actions — PR с новыми SHA действий (uses: закреплены по SHA).
+version: 2
+updates:
+  - package-ecosystem: npm
+    directories: ["/app"]
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 0
+    cooldown:
+      default-days: 7
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    target-branch: feature/next
+    cooldown:
+      default-days: 7
